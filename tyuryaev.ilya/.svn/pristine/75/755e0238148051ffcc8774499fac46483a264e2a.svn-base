@@ -1,0 +1,191 @@
+#include "employees.h"
+
+Employee *get_emp(int32_t t)
+{
+    if (t == 1)
+        return new Developer();
+    else if (t == 2)
+        return new SalesManager();
+    assert(false);
+}
+
+std::ostream &operator<<(std::ostream &out, const Employee &emp)
+{
+    emp.write_text_data(out);
+    return out;
+}
+std::istream &operator>>(std::istream &in, Employee &emp)
+{
+    emp.read_text_data(in);
+    return in;
+}
+std::ofstream &operator<<(std::ofstream &out, const Employee &emp)
+{
+    emp.write_bin_data(out);
+    return out;
+}
+std::ifstream &operator>>(std::ifstream &in, Employee &emp)
+{
+    emp.read_bin_data(in);
+    return in;
+}
+void Employee::read_text_data(std::istream &in)
+{
+    in >> _name >> _base_salary;
+}
+void Employee::write_text_data(std::ostream &out) const
+{
+    out << "Name: " << _name << '\n';
+    out << "Base Salary: " << _base_salary << '\n';
+}
+void Employee::read_bin_data(std::ifstream &in)
+{
+    char buffer[max_len];
+    in.getline(buffer, sizeof(char) * (max_len), '\0');
+    _name = std::string(buffer);
+    in.read((char *)&_base_salary, sizeof(_base_salary));
+}
+void Employee::write_bin_data(std::ofstream &out) const
+{
+    int32_t t = get_vocation_id();
+    out.write((char *)&t, sizeof(t));
+    out.write(_name.c_str(), sizeof(char) * (_name.size() + 1));
+    out.write((char *)&_base_salary, sizeof(_base_salary));
+}
+int32_t Employee::salary() const
+{
+    assert(false);
+    return 0;
+}
+std::string Employee::get_vocation_name() const
+{
+    assert(false);
+    return "";
+}
+int32_t Employee::get_vocation_id() const
+{
+    assert(false);
+    return 0;
+}
+
+int32_t Developer::salary() const
+{
+    int32_t salary = _base_salary;
+    if (_has_bonus)
+    {
+        salary += 1000;
+    }
+    return salary;
+}
+void Developer::read_text_data(std::istream &in)
+{
+    Employee::read_text_data(in);
+    in >> _has_bonus;
+}
+void Developer::write_text_data(std::ostream &out) const
+{
+    Employee::write_text_data(out);
+    out << "Has bonus: " << (_has_bonus ? '+' : '-') << '\n';
+}
+void Developer::read_bin_data(std::ifstream &in)
+{
+    Employee::read_bin_data(in);
+    in.read((char *)&_has_bonus, sizeof(_has_bonus));
+}
+void Developer::write_bin_data(std::ofstream &out) const
+{
+    Employee::write_bin_data(out);
+    out.write((char *)&_has_bonus, sizeof(_has_bonus));
+}
+std::string Developer::get_vocation_name() const
+{
+    return "Developer";
+}
+int32_t Developer::get_vocation_id() const
+{
+    return (int32_t)1;
+}
+
+int32_t SalesManager::salary() const
+{
+    return _base_salary + _sold_nm * _price * 0.01;
+}
+void SalesManager::read_text_data(std::istream &in)
+{
+    Employee::read_text_data(in);
+    in >> _sold_nm >> _price;
+}
+void SalesManager::write_text_data(std::ostream &out) const
+{
+    Employee::write_text_data(out);
+    out << "Sold items: " << _sold_nm << '\n';
+    out << "Item price: " << _price << '\n';
+}
+void SalesManager::read_bin_data(std::ifstream &in)
+{
+    Employee::read_bin_data(in);
+    in.read((char *)&_sold_nm, sizeof(_sold_nm));
+    in.read((char *)&_price, sizeof(_price));
+}
+void SalesManager::write_bin_data(std::ofstream &out) const
+{
+    Employee::write_bin_data(out);
+    out.write((char *)&_sold_nm, sizeof(_sold_nm));
+    out.write((char *)&_price, sizeof(_price));
+}
+std::string SalesManager::get_vocation_name() const
+{
+    return "Sales Manager";
+}
+int32_t SalesManager::get_vocation_id() const
+{
+    return (int32_t)2;
+}
+
+EmployeesArray::~EmployeesArray()
+{
+    for (size_t i = 0; i < _employees.size(); ++i)
+        delete (_employees[i]);
+}
+void EmployeesArray::add(Employee *const e)
+{
+    _employees.push_back(e);
+}
+void EmployeesArray::list() const
+{
+    for (size_t i = 0; i < _employees.size(); ++i)
+    {
+        std::cout << i + 1 << ". " << _employees[i]->get_vocation_name() << '\n';
+        std::cout << *_employees[i];
+    }
+    std::cout << "== Total salary: " << total_salary() << "\n\n";
+}
+int32_t EmployeesArray::total_salary() const
+{
+    int32_t _total_salary = 0;
+    for (size_t i = 0; i < _employees.size(); ++i)
+        _total_salary += _employees[i]->salary();
+    return _total_salary;
+}
+std::ofstream &operator<<(std::ofstream &out, const EmployeesArray &arr)
+{
+    int32_t counter = arr._employees.size();
+    out.write((char *)&counter, sizeof(counter));
+    for (int32_t i = 0; i < counter; ++i)
+        out << *arr._employees[i];
+    return out;
+}
+std::ifstream &operator>>(std::ifstream &in, EmployeesArray &arr)
+{
+    int32_t counter;
+    in.read((char *)&counter, sizeof(counter));
+    for (int32_t i = 0; i < counter; ++i)
+    {
+        int32_t t;
+        in.read((char *)&t, sizeof(t));
+        Employee *emp = get_emp(t);
+        in >> *emp;
+        arr.add(emp);
+    }
+    return in;
+}

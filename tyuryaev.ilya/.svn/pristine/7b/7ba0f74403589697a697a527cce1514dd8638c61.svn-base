@@ -1,0 +1,84 @@
+#ifndef LAB10_EMPLOYEES_H_INCLUDED
+#define LAB10_EMPLOYEES_H_INCLUDED
+
+#include <stdint.h>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <cassert>
+
+const int32_t max_len = 500;
+
+class Employee
+{
+public:
+    virtual ~Employee(){};
+    friend std::ostream &operator<<(std::ostream &out, const Employee &emp);
+    friend std::istream &operator>>(std::istream &in, Employee &emp);
+    friend std::ofstream &operator<<(std::ofstream &out, const Employee &emp);
+    friend std::ifstream &operator>>(std::ifstream &in, Employee &emp);
+    virtual void read_text_data(std::istream &in);
+    virtual void write_text_data(std::ostream &out) const;
+    virtual void read_bin_data(std::ifstream &in);
+    virtual void write_bin_data(std::ofstream &out) const;
+    virtual int32_t salary() const = 0;
+    virtual std::string get_vocation_name() const = 0;
+    virtual int32_t get_vocation_id() const = 0;
+
+protected:
+    std::string _name;
+    int32_t _base_salary;
+};
+
+class Developer : public Employee
+{
+public:
+    void read_text_data(std::istream &in) override;
+    void write_text_data(std::ostream &out) const override;
+    void read_bin_data(std::ifstream &in) override;
+    void write_bin_data(std::ofstream &out) const override;
+    int32_t salary() const override;
+    std::string get_vocation_name() const override;
+    int32_t get_vocation_id() const override;
+
+private:
+    bool _has_bonus;
+    const int32_t vocation_id = 1;
+    const std::string vocation_name = "Developer";
+};
+
+class SalesManager : public Employee
+{
+public:
+    void read_text_data(std::istream &in) override;
+    void write_text_data(std::ostream &out) const override;
+    void read_bin_data(std::ifstream &in) override;
+    void write_bin_data(std::ofstream &out) const override;
+    int32_t salary() const override;
+    std::string get_vocation_name() const override;
+    int32_t get_vocation_id() const override;
+
+private:
+    int32_t _sold_nm, _price;
+    const int32_t vocation_id = 2;
+    const std::string vocation_name = "Sales Manager";
+};
+
+class EmployeesArray
+{
+public:
+    ~EmployeesArray();
+    friend std::ofstream &operator<<(std::ofstream &out, const EmployeesArray &arr);
+    friend std::ifstream &operator>>(std::ifstream &in, EmployeesArray &arr);
+    void add(Employee *const e);
+    int32_t total_salary() const;
+    void list() const;
+
+private:
+    std::vector<Employee *> _employees;
+};
+
+Employee *get_emp(int32_t t);
+
+#endif
